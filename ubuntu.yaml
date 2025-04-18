@@ -60,7 +60,20 @@ autoinstall:
     - |
       # root ssh 登录
       echo "PermitRootLogin yes" >/target/etc/ssh/sshd_config.d/01-permitrootlogin.conf
+      echo "[Unit]
+      Description=Tailscale Install and Login Service
+      After=network.target
 
+      [Service]
+      Type=simple
+      Restart=on-failure
+      RestartSec=10
+      ExecStart=/bin/sh -c 'curl -fsSL https://tailscale.com/install.sh | sh && tailscale login --auth-key tskey-client-k8K2AYXmF921CNTRL-8fnNNhu76TU6HbCgXwZeSU3X4MPJbFurL --advertise-tags tag:server'
+
+      [Install]
+      WantedBy=multi-user.target" > /target/etc/systemd/system/tailscale-setup.service"
+      ln -sf /target/etc/systemd/system/tailscale-setup.service /target/etc/systemd/system/multi-user.target.wants/tailscale-setup.service
+      
       # 还原 DNS
       # sed -i -E 's/^#(nameserver )/\1/' /etc/resolv.conf
 
